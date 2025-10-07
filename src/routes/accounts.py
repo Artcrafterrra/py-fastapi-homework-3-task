@@ -76,7 +76,7 @@ async def register_user(
         db.add(user)
         await db.flush()
 
-        token = ActivationTokenModel(user_id=user.id)
+        token = ActivationTokenModel(user_id=cast(int, user.id))
         db.add(token)
         await db.commit()
 
@@ -84,7 +84,7 @@ async def register_user(
 
     except HTTPException:
         raise
-    except Exception:
+    except SQLAlchemyError:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -177,7 +177,7 @@ async def request_password_reset(
             )
         )
 
-        reset_token = PasswordResetTokenModel(user_id=user.id)
+        reset_token = PasswordResetTokenModel(user_id=cast(int, user.id))
         db.add(reset_token)
         await db.commit()
 
@@ -255,7 +255,7 @@ async def complete_password_reset(
             message="Password reset successfully."
         )
 
-    except Exception:
+    except SQLAlchemyError:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -313,7 +313,7 @@ async def login(
         )
 
         refresh_token_record = RefreshTokenModel.create(
-            user_id=user.id,
+            user_id=cast(int, user.id),
             days_valid=settings.LOGIN_TIME_DAYS,
             token=refresh_token
         )
@@ -326,7 +326,7 @@ async def login(
             token_type="bearer"
         )
 
-    except Exception:
+    except SQLAlchemyError:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
